@@ -1,19 +1,27 @@
 #!/usr/bin/env python3
 
+import os
 import re
 import argparse
+import sys
+
+# error exit codes
+ERR_CANNOT_OVERWRITE_FILE = 1
+
 from warnings import warn
 from collections import (
     namedtuple,
     defaultdict,
     OrderedDict,
     )
-import openpyxl
+from openpyxl import Workbook, load_workbook
 
 def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('input_xls')
-    parser.add_argument('output_xls')
+    parser.add_argument('output_xls', nargs='?', default=None)
+    parser.add_argument('-O', '--overwrite', action='store_true', default=False,
+                        help='Overwrite output file, if it exists')
     return parser.parse_args()
 
 RawIndexEntry = namedtuple('RawIndexEntry', 'heading pages see_also')
@@ -31,6 +39,28 @@ class Locator:
         if see_also == "":
             return pages
         return pages + ", see also " + see_also
+
+class Index:
+    def __init__(self):
+        # Mapping index heading to locator value (i.e., locator rendered to string)
+        self.entries = OrderedDict()
+    @classmethod
+    def from_raw_index(cls, raw_index):
+        index = cls()
+        for heading, locator in sorted(raw_index.items(), key=heading_sort_key):
+            index.entries[heading] = locator.render()
+        return index
+    def write_spreadsheet(self, dest: str, overwrite: bool = False):
+        wb = Workbook()
+        ws = wb.active
+        for heading, locator_value in self.entries.items():
+            ws.append([heading, locator_value])
+        if (not overwrite) and os.path.exists(dest):
+            raise FileExistsError(dest)
+        wb.save(dest)
+    def pretty_print(self):
+        for heading, locator_value in self.entries.items():
+            print("{}: {}".format(heading, locator_value))
 
 def render_pages(page_set):
     if len(page_set) == 0:
@@ -64,12 +94,6 @@ def heading_sort_key(pair):
         return key[1:]
     return key
 
-def make_index(raw_index):
-    index = OrderedDict()
-    for heading, locator in sorted(raw_index.items(), key=heading_sort_key):
-        index[heading] = locator.render()
-    return index
-    
 def raw_index_from_entries(entries):
     raw_index = defaultdict(Locator)
     for entry in entries:
@@ -79,7 +103,7 @@ def raw_index_from_entries(entries):
     return raw_index
 
 def raw_index_entries(input_xls):
-    wb = openpyxl.load_workbook(filename=input_xls, read_only=True)
+    wb = load_workbook(filename=input_xls, read_only=True)
     ws = wb.active
     for row in ws.rows:
         heading, pagespec = row[0].value, str(row[1].value)
@@ -119,13 +143,18 @@ def pagerange(start_s, end_s):
     real_end_s = start_s[:offset] + end_s
     end_i = int(real_end_s)
     return set(range(start_i, end_i + 1))
-    
 
 if __name__ == '__main__':
     args = get_args()
     entries = raw_index_entries(args.input_xls)
     raw_index = raw_index_from_entries(entries)
-    index = make_index(raw_index)
-    for heading, locator_value in index.items():
-        print("{}: {}".format(heading, locator_value))
-    
+    index = Index.from_raw_index(raw_index)
+    if args.output_xls is None:
+        index.pretty_print()
+    else:
+        try:
+            index.write_spreadsheet(args.output_xls, args.overwrite)
+        except FileExistsError:
+            sys.stderr.write('Output file "{}" already exists. Refusing to overwrite. (Use --overwrite to force.)\n'.format(args.output_xls))
+            sys.exit(ERR_CANNOT_OVERWRITE_FILE)
+            
