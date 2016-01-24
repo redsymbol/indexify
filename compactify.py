@@ -2,6 +2,7 @@
 
 import re
 import argparse
+from warnings import warn
 from collections import (
     namedtuple,
     defaultdict,
@@ -17,6 +18,7 @@ def get_args():
 
 RawIndexEntry = namedtuple('RawIndexEntry', 'heading pages see_also')
 RawLocator = namedtuple('RawLocator', 'pages see_also')
+
 class Locator:
     def __init__(self):
         self.pages = set()
@@ -71,6 +73,7 @@ def raw_index_entries(input_xls):
         try:
             raw_locator = pagespec2rawlocator(pagespec)
         except ValueError:
+            warn("Cannot parse row: {}: {}".format(heading, pagespec))
             continue
         yield RawIndexEntry(
             heading,
