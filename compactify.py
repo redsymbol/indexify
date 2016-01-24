@@ -24,7 +24,13 @@ class Locator:
         self.pages = set()
         self.see_also = set()
     def render(self):
-        return _render_pages(self.pages)
+        pages = _render_pages(self.pages)
+        see_also = ", ".join(sorted(self.see_also))
+        if pages == "":
+            return "see " + see_also
+        if see_also == "":
+            return pages
+        return pages + ", see also " + see_also
 
 def _render_pages(page_set):
     if len(page_set) == 0:
@@ -83,17 +89,22 @@ def raw_index_entries(input_xls):
 def pagespec2rawlocator(pages_spec):
     first, *remain = pages_spec.split(',')
     first = first.strip()
+    see_also = set()
     if re.search(r'^\d+$', first):
         pages = {int(first)}
     elif re.search(r'^\d+-\d+$', first):
         start_s, end_s = first.split('-')
         pages = _pagerange(start_s, end_s)
+    elif re.search(r'^see ', first):
+        pages = set()
+        see_also = {first[4:]}
     else:
         raise ValueError(first)
     for spec in remain:
         rawlocator = pagespec2rawlocator(spec)
         pages |= rawlocator.pages
-    return RawLocator(pages, set())
+        see_also |= rawlocator.see_also
+    return RawLocator(pages, see_also)
 
 def _pagerange(start_s, end_s):
     offset = len(start_s) - len(end_s)

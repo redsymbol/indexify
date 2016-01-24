@@ -14,6 +14,8 @@ class TestCompactify(unittest.TestCase):
             ("137-142", {137, 138, 139, 140, 141, 142}, set()),
             ("7, 3",    {7, 3}, set()),
             ("7-9, 3",  {7, 8, 9, 3}, set()),
+            ("see foo", set(), {"foo"}),
+            ("see foo bar", set(), {"foo bar"}),
             ]
         for pagespec, pages, see_also in pagespecs:
             with self.subTest(pagespec=pagespec, pages=pages, see_also=see_also):
