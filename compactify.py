@@ -24,7 +24,7 @@ class Locator:
         self.pages = set()
         self.see_also = set()
     def render(self):
-        pages = _render_pages(self.pages)
+        pages = render_pages(self.pages)
         see_also = ", ".join(sorted(self.see_also))
         if pages == "":
             return "see " + see_also
@@ -32,7 +32,7 @@ class Locator:
             return pages
         return pages + ", see also " + see_also
 
-def _render_pages(page_set):
+def render_pages(page_set):
     if len(page_set) == 0:
         return ""
     intervals = []
@@ -101,7 +101,7 @@ def pagespec2rawlocator(pages_spec):
         pages = {int(first)}
     elif re.search(r'^\d+-\d+$', first):
         start_s, end_s = first.split('-')
-        pages = _pagerange(start_s, end_s)
+        pages = pagerange(start_s, end_s)
     elif re.search(r'^see ', first):
         pages = set()
         see_also = {first[4:]}
@@ -113,7 +113,7 @@ def pagespec2rawlocator(pages_spec):
         see_also |= rawlocator.see_also
     return RawLocator(pages, see_also)
 
-def _pagerange(start_s, end_s):
+def pagerange(start_s, end_s):
     offset = len(start_s) - len(end_s)
     start_i = int(start_s)
     real_end_s = start_s[:offset] + end_s

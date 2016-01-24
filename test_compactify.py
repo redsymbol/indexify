@@ -23,7 +23,7 @@ class TestCompactify(unittest.TestCase):
                 self.assertEqual(pages, rawlocator.pages)
                 self.assertEqual(see_also, rawlocator.see_also)
 
-    def test_render_locator__render_pages(self):
+    def test_render_locator_render_pages(self):
         page_sets = [
             # page_set, render string
             ({3}, "3"),
@@ -36,4 +36,4 @@ class TestCompactify(unittest.TestCase):
         ]
         for page_set, rendered in page_sets:
             with self.subTest(page_set=page_set, rendered=rendered):
-                self.assertEqual(rendered, compactify._render_pages(page_set))
+                self.assertEqual(rendered, compactify.render_pages(page_set))
