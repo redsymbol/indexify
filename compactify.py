@@ -22,16 +22,32 @@ class Locator:
         self.pages = set()
         self.see_also = set()
     def render(self):
-        s = ""
-        if self.pages:
-            s += ",".join(map(str, sorted(self.pages)))
-        if self.see_also:
-            if s == "":
-                s += "see "
-            else:
-                s += ", see also "
-            s += ", ".join(sorted(self.see_also))
-        return s
+        return _render_pages(self.pages)
+
+def _render_pages(page_set):
+    if len(page_set) == 0:
+        return ""
+    intervals = []
+    pages = sorted(page_set)
+    last = pages.pop(0)
+    start = last
+    page = last
+    while pages:
+        page = pages.pop(0)
+        if last + 1 == page:
+            last = page
+            continue
+        intervals.append((start, last))
+        start = page
+        last = page
+    intervals.append((start, page))
+    substrings = []
+    for start, end in intervals:
+        if start == end:
+            substrings.append(str(start))
+        else:
+            substrings.append("{}-{}".format(start, end))
+    return ", ".join(substrings)
 
 def make_index(raw_index):
     index = OrderedDict()
