@@ -57,9 +57,16 @@ def _render_pages(page_set):
             substrings.append("{}-{}".format(start, end))
     return ", ".join(substrings)
 
+def heading_sort_key(pair):
+    heading = pair[0]
+    key = heading.lower()
+    if len(key) > 0 and key[0] in '"“':
+        return key[1:]
+    return key
+
 def make_index(raw_index):
     index = OrderedDict()
-    for heading, locator in sorted(raw_index.items(), key=lambda pair: pair[0].lower()):
+    for heading, locator in sorted(raw_index.items(), key=heading_sort_key):
         index[heading] = locator.render()
     return index
     
