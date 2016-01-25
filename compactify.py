@@ -111,8 +111,8 @@ def raw_index_from_entries(entries):
     raw_index = defaultdict(Locator)
     for entry in entries:
         locator = raw_index[entry.heading]
-        locator.pages |= entry.pages
-        locator.see_also |= entry.see_also
+        locator.pages.update(entry.pages)
+        locator.see_also.update(entry.see_also)
     return raw_index
 
 def raw_index_entries(input_xls):
