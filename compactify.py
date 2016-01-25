@@ -131,24 +131,29 @@ def raw_index_entries(input_xls):
             raw_locator.see_also)
 
 def pagespec2rawlocator(pages_spec):
-    first, *remain = pages_spec.split(',')
-    first = first.strip()
-    see_also = set()
-    if re.search(r'^\d+$', first):
-        pages = {int(first)}
-    elif re.search(r'^\d+-\d+$', first):
-        start_s, end_s = first.split('-')
-        pages = pagerange(start_s, end_s)
-    elif re.search(r'^see ', first):
-        pages = set()
-        see_also = {first[4:]}
-    else:
-        raise ValueError(first)
-    for spec in remain:
-        rawlocator = pagespec2rawlocator(spec)
-        pages |= rawlocator.pages
-        see_also |= rawlocator.see_also
-    return RawLocator(pages, see_also)
+    def handle_parts(parts, raw_locator = None):
+        if raw_locator is None:
+            raw_locator = RawLocator(set(), set()) 
+        first, *remain = parts
+        first = first.strip()
+        see_also = set()
+        if re.search(r'^\d+$', first):
+            pages = {int(first)}
+        elif re.search(r'^\d+-\d+$', first):
+            start_s, end_s = first.split('-')
+            pages = pagerange(start_s, end_s)
+        elif re.search(r'^see ', first):
+            pages = set()
+            see_also = {first[4:]}
+        else:
+            raise ValueError(first)
+        raw_locator.pages.update(pages)
+        raw_locator.see_also.update(see_also)
+        if not remain:
+            return raw_locator
+        return handle_parts(remain, raw_locator)
+    return handle_parts(pages_spec.split(','))
+
 
 def pagerange(start_s, end_s):
     offset = len(start_s) - len(end_s)
