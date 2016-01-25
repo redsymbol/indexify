@@ -5,9 +5,6 @@ import re
 import argparse
 import sys
 
-# error exit codes
-ERR_CANNOT_OVERWRITE_FILE = 1
-
 from warnings import warn
 from collections import (
     namedtuple,
@@ -24,6 +21,9 @@ def get_args():
     parser.add_argument('-O', '--overwrite', action='store_true', default=False,
                         help='Overwrite output file, if it exists')
     return parser.parse_args()
+
+# error exit codes
+ERR_CANNOT_OVERWRITE_FILE = 1
 
 RawIndexEntry = namedtuple('RawIndexEntry', 'heading pages see_also')
 RawLocator = namedtuple('RawLocator', 'pages see_also')
