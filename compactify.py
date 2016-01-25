@@ -64,6 +64,10 @@ class Index:
                 mk_cell(heading),
                 mk_cell(locator_value),
             ])
+        # openpyxl.Workbook.save silently overwrites its target, if
+        # the file already exists.  This clobber check is a slight
+        # race condition, but can't be helped without modifying that
+        # save method itself.
         if (not overwrite) and os.path.exists(dest):
             raise FileExistsError(dest)
         wb.save(dest)
