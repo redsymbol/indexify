@@ -15,6 +15,7 @@ from collections import (
     OrderedDict,
     )
 from openpyxl import Workbook, load_workbook
+from openpyxl.cell import Cell
 
 def get_args():
     parser = argparse.ArgumentParser()
@@ -53,8 +54,16 @@ class Index:
     def write_spreadsheet(self, dest: str, overwrite: bool = False):
         wb = Workbook()
         ws = wb.active
+        def mk_cell(value):
+            cell = Cell(ws)
+            cell.number_format = '@' # Ensure text cell format
+            cell.set_explicit_value(value)
+            return cell
         for heading, locator_value in self.entries.items():
-            ws.append([heading, locator_value])
+            ws.append([
+                mk_cell(heading),
+                mk_cell(locator_value),
+            ])
         if (not overwrite) and os.path.exists(dest):
             raise FileExistsError(dest)
         wb.save(dest)
